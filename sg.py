@@ -3,16 +3,17 @@ import requests
 import json
 import sys
 import time
+import os
 
-cookie = open('cookie.txt', "r+")
-cookie = cookie.read()
-
+working_dir = os.path.split(os.path.realpath(__file__))[0]
+f = open(working_dir+'/cookie.txt', "r+")
+cookie = f.read()
 if not cookie:
     print('no cookie found, exit')
     sys.exit()
+f.close()
 
 base_url = ('http://www.steamgifts.com')
-page_str = ''
 
 site_headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -50,7 +51,7 @@ def loop_page(page_url):
     r = requests.get(page_url, headers=site_headers)
     html_element = lxml.html.document_fromstring(r.text)
 
-    if get_user_pt(html_element) < 20:
+    if get_user_pt(html_element) < 10:
         return True
 
     game_elements = html_element.xpath("//div[@class='giveaway__summary']")
@@ -78,7 +79,8 @@ def loop_page(page_url):
         time.sleep(2)
     return False
 
-while 1:
+
+while True:
     r = requests.get(base_url, headers=site_headers)
     html_element = lxml.html.document_fromstring(r.text)
     xsrf_token_elements = html_element.xpath("//input[@name='xsrf_token']")
@@ -87,18 +89,18 @@ while 1:
         sys.exit()
     xsrf_token = xsrf_token_elements[0].value
 
-    pt = get_user_pt(html_element)
-    if pt < 250:
-        print("Current pt: "+str(pt)+". Sleep 15 mins")
-        time.sleep(900)
-        continue
-
     if loop_page(base_url+'/giveaways/search?type=wishlist'):
         print("loop done")
-        continue
-
-    for page in range(100):
-        url = '' if page == 0 else '/giveaways/search?page=' + str(page+1)
-        if loop_page(base_url+url):
-            print("loop done")
-            break
+    else:
+        for page in range(100):
+            url = '' if page == 0 else '/giveaways/search?page=' + str(page+1)
+            if loop_page(base_url+url):
+                print("loop done")
+                break
+    pt = 0
+    while pt < 160:
+        print("Current pt: "+str(pt)+". Sleep 30 mins")
+        time.sleep(1800)
+        r = requests.get(base_url, headers=site_headers)
+        html_element = lxml.html.document_fromstring(r.text)
+        pt = get_user_pt(html_element)
