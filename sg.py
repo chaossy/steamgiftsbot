@@ -13,19 +13,29 @@ if not cookie:
     sys.exit()
 f.close()
 
-base_url = ('http://www.steamgifts.com')
+base_url = ('https://www.steamgifts.com')
 
 site_headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate, sdch',
     'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4,de;q=0.2',
-    'Cache-Control': 'max-age=0',
+    # 'Cache-Control': 'max-age=0',
     'Connection': 'keep-alive',
     'Cookie': 'PHPSESSID='+cookie,
     'Host': 'www.steamgifts.com',
     'Upgrade-Insecure-Requests': '1',
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36'
 }
+
+# Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+# Accept-Encoding:gzip, deflate, sdch
+# Accept-Language:zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4,de;q=0.2
+# Connection:keep-alive
+# Cookie:_gat=1; _ga=GA1.2.1263490937.1451986023; PHPSESSID=9amug2klqsjb8d8t8oqlovd1pt62q70q2n81l36m4o6ip9fbiu0smdomav4act6mlhg68seo8qus4uno5235luo9cilsrs2uncpk7u1
+# Host:www.steamgifts.com
+# Upgrade-Insecure-Requests:1
+# User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36
+
 
 enter_headers = {
     'Accept':'application/json, text/javascript, */*; q=0.01',
@@ -34,7 +44,7 @@ enter_headers = {
     'Connection':'keep-alive',
     # 'Content-Length':'70',
     'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8',
-    'Cookie':'PHPSESSID='+cookie,
+    'Cookie': 'PHPSESSID='+cookie,
     'Host':'www.steamgifts.com',
     'Origin':'http://www.steamgifts.com',
     'Referer':'http://www.steamgifts.com/giveaway/rH8eR/trouble-in-the-manor',
@@ -88,6 +98,7 @@ while True:
         print("xsrf token not found (maybe cookie expired?), exit")
         sys.exit()
     xsrf_token = xsrf_token_elements[0].value
+    # xsrf_token = 'f2a22d7a5fa0f68757a9d407d536ed1e'
 
     if loop_page(base_url+'/giveaways/search?type=wishlist'):
         print("loop done")
