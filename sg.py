@@ -11,6 +11,8 @@ cookie = f.read()
 if not cookie:
     print('no cookie found, exit')
     sys.exit()
+if cookie[-1:] == '\n':
+    cookie = cookie[:-1]
 f.close()
 
 base_url = ('https://www.steamgifts.com')
@@ -58,60 +60,73 @@ def get_user_pt(html_element):
     return pt
 
 def loop_page(page_url):
-    r = requests.get(page_url, headers=site_headers)
-    html_element = lxml.html.document_fromstring(r.text)
+    try:
+        r = requests.get(page_url, headers=site_headers)
+    except requests.ConnectionError:
+        return False
+    else:
+        html_element = lxml.html.document_fromstring(r.text)
 
-    if get_user_pt(html_element) < 10:
-        return True
-
-    game_elements = html_element.xpath("//div[@class='giveaway__summary']")
-    # user_level = xmldata.xpath("//a[@href='/account']")
-    # user_level_element = xmldata.xpath("//span[@title='1.27']")[0]
-    # user_level = int(user_level_element.text.split(' ')[1])
-    for game_element in game_elements:
-        neg_level_elements = game_element.xpath(".//div[@class='giveaway__column--contributor-level giveaway__column--contributor-level--negative']")
-        if neg_level_elements:
-            # required_level = int(level_elements[0].text.split(' ')[1][:-1])
-            # if user_level < required_level:
-            continue
-        code_element = game_element.xpath(".//a[@class='giveaway__heading__name']")[0]
-        href = code_element.attrib['href']
-        code = href.split('/')[2]
-        post_data = {
-            'xsrf_token':xsrf_token,
-            'do':'entry_insert',
-            'code':code,
-        }
-        r = requests.post(base_url+'/ajax.php', headers=enter_headers, data=post_data)
-        pt = int(json.loads(r.content)['points'])
-        if pt < 20:
+        if get_user_pt(html_element) < 10:
             return True
-        time.sleep(2)
-    return False
+
+        game_elements = html_element.xpath("//div[@class='giveaway__summary']")
+        # user_level = xmldata.xpath("//a[@href='/account']")
+        # user_level_element = xmldata.xpath("//span[@title='1.27']")[0]
+        # user_level = int(user_level_element.text.split(' ')[1])
+        for game_element in game_elements:
+            neg_level_elements = game_element.xpath(".//div[@class='giveaway__column--contributor-level giveaway__column--contributor-level--negative']")
+            if neg_level_elements:
+                # required_level = int(level_elements[0].text.split(' ')[1][:-1])
+                # if user_level < required_level:
+                continue
+            code_element = game_element.xpath(".//a[@class='giveaway__heading__name']")[0]
+            href = code_element.attrib['href']
+            code = href.split('/')[2]
+            post_data = {
+                'xsrf_token':xsrf_token,
+                'do':'entry_insert',
+                'code':code,
+            }
+            try:
+                r = requests.post(base_url+'/ajax.php', headers=enter_headers, data=post_data)
+            except ConnectionError:
+                continue
+            else:
+                pt = int(json.loads(r.content)['points'])
+                if pt < 20:
+                    return True
+                time.sleep(2)
+        return False
 
 
 while True:
-    r = requests.get(base_url, headers=site_headers)
-    html_element = lxml.html.document_fromstring(r.text)
-    xsrf_token_elements = html_element.xpath("//input[@name='xsrf_token']")
-    if not xsrf_token_elements:
-        print("xsrf token not found (maybe cookie expired?), exit")
-        sys.exit()
-    xsrf_token = xsrf_token_elements[0].value
-    # xsrf_token = 'f2a22d7a5fa0f68757a9d407d536ed1e'
-
-    if loop_page(base_url+'/giveaways/search?type=wishlist'):
-        print("loop done")
+    try:
+        r = requests.get(base_url, headers=site_headers)
+    except requests.ConnectionError:
+        continue
     else:
+        html_element = lxml.html.document_fromstring(r.text)
+        xsrf_token_elements = html_element.xpath("//input[@name='xsrf_token']")
+        if not xsrf_token_elements:
+            print("xsrf token not found (maybe cookie expired?), exit")
+            sys.exit()
+        xsrf_token = xsrf_token_elements[0].value
+
+        loop_page(base_url+'/giveaways/search?type=wishlist')
+        print("loop wishlist done")
+
         for page in range(100):
             url = '' if page == 0 else '/giveaways/search?page=' + str(page+1)
             if loop_page(base_url+url):
-                print("loop done")
+                print("loop done, will sleep 4 hours...")
                 break
-    pt = 0
-    while pt < 160:
-        print("Current pt: "+str(pt)+". Sleep 30 mins")
-        time.sleep(1800)
-        r = requests.get(base_url, headers=site_headers)
-        html_element = lxml.html.document_fromstring(r.text)
-        pt = get_user_pt(html_element)
+
+        time.sleep(3600*4)
+        # pt = 0
+        # while pt < 160:
+        #     print("Current pt: "+str(pt)+". Sleep 30 mins")
+        #     time.sleep(1800)
+        #     r = requests.get(base_url, headers=site_headers)
+        #     html_element = lxml.html.document_fromstring(r.text)
+        #     pt = get_user_pt(html_element)
