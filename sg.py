@@ -90,7 +90,7 @@ def loop_page(page_url):
             }
             try:
                 r = requests.post(base_url+'/ajax.php', headers=enter_headers, data=post_data)
-            except ConnectionError:
+            except requests.ConnectionError:
                 continue
             else:
                 pt = int(json.loads(r.content)['points'])
